@@ -1,8 +1,9 @@
 import argparse
 import glob
 import os
-import tqdm
+
 import soundfile as sf
+import tqdm
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -13,11 +14,11 @@ if __name__ == "__main__":
         "-o",
         "--output",
         type=str,
-        default="./filelists/48k_audio_filelist.txt",
+        default="./filelists/44.1k_audio_filelist.txt",
         help="File list output path",
     )
     parser.add_argument(
-        "-s", "--sr", type=int, default=48000, help="File target sample rate"
+        "-s", "--sr", type=int, default=44100, help="File target sample rate"
     )
     args = parser.parse_args()
 

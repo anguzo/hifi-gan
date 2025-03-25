@@ -7,6 +7,9 @@ from typing import Optional
 import lightning.pytorch as pl
 import lightning_fabric
 import torch
+
+torch.set_float32_matmul_precision("high")
+
 import torchaudio
 import tqdm
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -50,14 +53,14 @@ def main():
         "-c",
         "--config",
         type=str,
-        default="./configs/24k.json",
+        default="./configs/44.1k.json",
         help="JSON file for configuration",
     )
     parser.add_argument(
         "-a", "--accelerator", type=str, default="gpu", help="training device"
     )
     parser.add_argument(
-        "-d", "--device", type=str, default="3", help="training device ids"
+        "-d", "--device", type=str, default="0", help="training device ids"
     )
     parser.add_argument(
         "-n", "--num-nodes", type=int, default=1, help="training node number"

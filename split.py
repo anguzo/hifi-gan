@@ -8,7 +8,7 @@ if __name__ == "__main__":
         "-i",
         "--input",
         type=str,
-        default="./filelists/48k_audio_filelist.txt",
+        default="./filelists/44.1k_audio_filelist.txt",
         help="filelist path",
     )
     parser.add_argument(
@@ -27,8 +27,8 @@ if __name__ == "__main__":
     origin_filename = os.path.basename(args.input)
     data_len = len(lines)
 
-    valid_num = int(data_len * 0.001)
-    test_num = int(data_len * 0.001)
+    valid_num = int(data_len * 0.1)
+    test_num = int(data_len * 0.1)
 
     with open(
         os.path.join(args.output, origin_filename.replace(".txt", "_train.txt")),
