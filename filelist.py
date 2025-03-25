@@ -6,9 +6,19 @@ import soundfile as sf
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', type=str, default="./dataset", help='Dataset path')
-    parser.add_argument('-o', '--output', type=str, default="./filelists/48k_audio_filelist.txt", help='File list output path')
-    parser.add_argument('-s', '--sr', type=int, default=48000, help='File target sample rate')
+    parser.add_argument(
+        "-i", "--input", type=str, default="./dataset", help="Dataset path"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="./filelists/48k_audio_filelist.txt",
+        help="File list output path",
+    )
+    parser.add_argument(
+        "-s", "--sr", type=int, default=48000, help="File target sample rate"
+    )
     args = parser.parse_args()
 
     audio_files = list(glob.glob(os.path.join(args.input, "**/*.wav"), recursive=True))
@@ -26,5 +36,5 @@ if __name__ == "__main__":
             audio_path = audio_path.replace("\\", "/")
             f.write(f"{audio_path}\n")
             total_time += sec
-    
+
     print(f"Total time: {total_time//3600}h")

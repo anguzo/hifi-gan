@@ -1,36 +1,36 @@
-
-import os
-import json
-import glob
 import argparse
+import glob
+import json
+import os
 from typing import Optional
+
+import lightning.pytorch as pl
+import lightning_fabric
 import torch
 import torchaudio
 import tqdm
+from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
+from lightning.pytorch.profilers import AdvancedProfiler, SimpleProfiler
 from torch import nn, optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from hifigan.light.hifigan import HifiGAN
 
 from hifigan.data.collate import MelCollate
-
-import lightning.pytorch as pl
-from lightning.pytorch.callbacks import ModelCheckpoint
-from lightning.pytorch.callbacks.early_stopping import EarlyStopping
-from lightning.pytorch.profilers import SimpleProfiler, AdvancedProfiler
-import lightning_fabric
-
+from hifigan.data.dataset import MelDataset
 from hifigan.hparams import HParams
-from hifigan.data.dataset import MelDataset, MelDataset
+from hifigan.light.hifigan import HifiGAN
 from hifigan.utils import load_state_dict
+
 
 def get_hparams(config_path: str) -> HParams:
     with open(config_path, "r") as f:
         data = f.read()
     config = json.loads(data)
-    
+
     hparams = HParams(**config)
     return hparams
+
 
 def last_checkpoint(path: str) -> Optional[str]:
     ckpt_path = None
@@ -42,12 +42,26 @@ def last_checkpoint(path: str) -> Optional[str]:
             if os.path.exists(last_ckpt):
                 ckpt_path = last_ckpt
     return ckpt_path
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default="./configs/24k.json", help='JSON file for configuration')
-    parser.add_argument('-a', '--accelerator', type=str, default="gpu", help='training device')
-    parser.add_argument('-d', '--device', type=str, default="3", help='training device ids')
-    parser.add_argument('-n', '--num-nodes', type=int, default=1, help='training node number')
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=str,
+        default="./configs/24k.json",
+        help="JSON file for configuration",
+    )
+    parser.add_argument(
+        "-a", "--accelerator", type=str, default="gpu", help="training device"
+    )
+    parser.add_argument(
+        "-d", "--device", type=str, default="3", help="training device ids"
+    )
+    parser.add_argument(
+        "-n", "--num-nodes", type=int, default=1, help="training node number"
+    )
     args = parser.parse_args()
 
     hparams = get_hparams(args.config)
@@ -56,10 +70,17 @@ def main():
     devices = [int(n.strip()) for n in args.device.split(",")]
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=None, save_last=True, every_n_train_steps=2000, save_weights_only=False,
-        monitor="valid/loss_mel_epoch", mode="min", save_top_k=5
+        dirpath=None,
+        save_last=True,
+        every_n_train_steps=2000,
+        save_weights_only=False,
+        monitor="valid/loss_mel_epoch",
+        mode="min",
+        save_top_k=5,
     )
-    earlystop_callback = EarlyStopping(monitor="valid/loss_mel_epoch", mode="min", patience=13)
+    earlystop_callback = EarlyStopping(
+        monitor="valid/loss_mel_epoch", mode="min", patience=13
+    )
 
     trainer_params = {
         "accelerator": args.accelerator,
@@ -80,7 +101,7 @@ def main():
     elif hparams.train.bp16_run:
         print("using bf16")
         trainer_params["precision"] = "bf16-mixed"
-    
+
     trainer_params["num_nodes"] = args.num_nodes
 
     # data
@@ -93,8 +114,22 @@ def main():
         batch_per_gpu = hparams.train.batch_size // len(devices)
     else:
         batch_per_gpu = hparams.train.batch_size
-    train_loader = DataLoader(train_dataset, batch_size=batch_per_gpu, num_workers=8, shuffle=True, pin_memory=True, collate_fn=collate_fn)
-    valid_loader = DataLoader(valid_dataset, batch_size=4, num_workers=4, shuffle=False, pin_memory=True, collate_fn=collate_fn)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_per_gpu,
+        num_workers=8,
+        shuffle=True,
+        pin_memory=True,
+        collate_fn=collate_fn,
+    )
+    valid_loader = DataLoader(
+        valid_dataset,
+        batch_size=4,
+        num_workers=4,
+        shuffle=False,
+        pin_memory=True,
+        collate_fn=collate_fn,
+    )
 
     # model
     model = HifiGAN(**hparams)
@@ -108,10 +143,16 @@ def main():
     # model.net_scale_d._load_from_state_dict(torch.load("net_scale_d.pt"), strict=False)
 
     # profiler = AdvancedProfiler(filename="profile.txt")
-    trainer = pl.Trainer(**trainer_params) # , profiler=profiler, max_steps=200
+    trainer = pl.Trainer(**trainer_params)  # , profiler=profiler, max_steps=200
     # resume training
     ckpt_path = last_checkpoint(hparams.trainer.default_root_dir)
-    trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=valid_loader, ckpt_path=ckpt_path)
+    trainer.fit(
+        model=model,
+        train_dataloaders=train_loader,
+        val_dataloaders=valid_loader,
+        ckpt_path=ckpt_path,
+    )
+
 
 if __name__ == "__main__":
-  main()
+    main()
