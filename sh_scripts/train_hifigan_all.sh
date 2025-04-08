@@ -13,4 +13,4 @@ micromamba activate hifigan
 # Total time: 11.0h
 # python split.py --input ./filelists/44.1k_audio_filelist_all.txt
 
-python train.py --config /gpfs/mariana/home/anguzo/projects/hifiganorig/configs/44.1k_all.json
+python train.py --config configs/44.1k_all.json

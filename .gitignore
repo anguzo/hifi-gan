@@ -181,3 +181,5 @@ slurm-*.stat
 dcgm-gpu-stats-*.out
 
 previous_logs/
+logs_48k_electric/
+logs_44.1k_electric/
