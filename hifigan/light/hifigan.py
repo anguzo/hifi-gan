@@ -269,14 +269,22 @@ class HifiGAN(pl.LightningModule):
             self.hparams.data.mel_fmin,
             self.hparams.data.mel_fmax,
         )
-        image_dict = {
-            "gen/mel": utils.plot_spectrogram_to_numpy(y_mel_hat[0].cpu().numpy()),
-            "gt/mel": utils.plot_spectrogram_to_numpy(y_mel[0].cpu().numpy()),
-        }
-        audio_dict = {
-            "gen/audio": y_wav_hat[0, :, : y_hat_lengths[0]].squeeze(0).float(),
-            "gt/audio": y_wav[0, :, : y_wav_lengths[0]].squeeze(0).float(),
-        }
+        sample_count = min(10, y_wav_hat.size(0))
+        image_dict = {}
+        audio_dict = {}
+        for i in range(sample_count):
+            image_dict[f"valid_example_{i}/y_(gen)_mel"] = (
+                utils.plot_spectrogram_to_numpy(y_mel_hat[i].cpu().numpy())
+            )
+            image_dict[f"valid_example_{i}/x_(gt)_mel"] = (
+                utils.plot_spectrogram_to_numpy(y_mel[i].cpu().numpy())
+            )
+            audio_dict[f"valid_example_{i}/y_(gen)_audio"] = (
+                y_wav_hat[i, :, : y_hat_lengths[0]].squeeze(0).float()
+            )
+            audio_dict[f"valid_example_{i}/y_(gt)_audio_"] = (
+                y_wav[i, :, : y_wav_lengths[i]].squeeze(0).float()
+            )
 
         mel_mask = torch.unsqueeze(
             sequence_mask(x_mel_lengths.long(), y_mel.size(2)), 1
